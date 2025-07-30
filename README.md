@@ -44,7 +44,7 @@ A modern, production-ready boilerplate for building cross-platform desktop appli
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/Kamionn/tauri-sveltekit-tailwind-boilerplate
    cd tauri-sveltekit-boilerplate
    ```
 
