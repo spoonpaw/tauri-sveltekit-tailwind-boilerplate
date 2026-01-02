@@ -50,22 +50,24 @@ async fn test_error_handling() -> Result<String, String> {
 #[tauri::command]
 async fn test_file_operations() -> Result<String, String> {
     use std::fs;
-    let temp_file = "test_temp.txt";
+    // In a bundled app, the current working directory may be read-only (e.g. inside the .app bundle).
+    // Use a guaranteed writable location instead.
+    let temp_file_path = std::env::temp_dir().join("tauri_sveltekit_test_temp.txt");
     
     // Test écriture
-    match fs::write(temp_file, "Test de fichier") {
+    match fs::write(&temp_file_path, "Test de fichier") {
         Ok(_) => {},
         Err(e) => return Err(format!("Échec écriture: {}", e)),
     }
     
     // Test lecture
-    let content = match fs::read_to_string(temp_file) {
+    let content = match fs::read_to_string(&temp_file_path) {
         Ok(c) => c,
         Err(e) => return Err(format!("Échec lecture: {}", e)),
     };
     
     // Nettoyage
-    let _ = fs::remove_file(temp_file);
+    let _ = fs::remove_file(&temp_file_path);
     
     Ok(format!("✅ Fichier écrit/lu: {}", content))
 }

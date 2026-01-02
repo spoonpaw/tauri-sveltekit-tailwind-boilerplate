@@ -66,6 +66,19 @@ A modern, production-ready boilerplate for building cross-platform desktop appli
 dev.bat
 ```
 
+**macOS / Linux:**
+```bash
+./dev.sh
+```
+
+### Build (macOS / Linux)
+
+```bash
+./build.sh
+```
+
+Outputs (macOS) will be under `backend/target/release/bundle/` (e.g. `.app`, `.dmg`).
+
 **Or manually:**
 ```bash
 # Terminal 1 - Start frontend dev server
@@ -74,7 +87,7 @@ npm run dev
 
 # Terminal 2 - Start Tauri app
 cd backend
-cargo tauri dev
+tauri dev
 ```
 
 ### Building for Production

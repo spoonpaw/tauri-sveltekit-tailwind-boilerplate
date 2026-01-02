@@ -47,7 +47,18 @@
   }
 
   async function testErrorHandling() {
-    await runTest('error', () => invoke('test_error_handling'));
+    await runTest('error', async () => {
+      try {
+        await invoke('test_error_handling');
+        throw new Error('Expected an error, but the command succeeded.');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        // This test is supposed to fail on the Rust side; if we caught the expected error,
+        // the UI test should be considered a success.
+        if (message.includes('Erreur de test volontaire')) return message;
+        throw new Error(`Unexpected error: ${message}`);
+      }
+    });
   }
 
   async function testGreet() {
