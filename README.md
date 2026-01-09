@@ -42,21 +42,10 @@ A modern, production-ready boilerplate for building cross-platform desktop appli
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Kamionn/tauri-sveltekit-tailwind-boilerplate
-   cd tauri-sveltekit-boilerplate
-   ```
+1. **Install dependencies**
 
-2. **Install frontend dependencies**
    ```bash
-   cd frontend
-   npm install
-   ```
-
-3. **Install Tauri CLI (if not already installed)**
-   ```bash
-   npm install -g @tauri-apps/cli
+./setup.sh
    ```
 
 ### Development

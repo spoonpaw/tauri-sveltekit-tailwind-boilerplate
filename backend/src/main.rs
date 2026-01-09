@@ -2,7 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use serde::{Deserialize, Serialize};
-use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SystemInfo {
@@ -95,10 +94,17 @@ async fn test_memory_usage() -> Result<String, String> {
     Ok("✅ Test mémoire: 1MB alloué temporairement".to_string())
 }
 
+#[tauri::command]
+async fn save_text_file(path: String, contents: String) -> Result<(), String> {
+    std::fs::write(&path, contents).map_err(|e| format!("Failed to write file: {e}"))?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             get_system_info,
@@ -109,7 +115,8 @@ pub fn run() {
             test_file_operations,
             test_json_parsing,
             test_network_simulation,
-            test_memory_usage
+            test_memory_usage,
+            save_text_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
