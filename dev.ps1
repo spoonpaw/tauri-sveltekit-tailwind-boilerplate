@@ -4,6 +4,7 @@ $ErrorActionPreference = "Stop"
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $VitePort = if ($env:VITE_PORT) { $env:VITE_PORT } else { "5173" }
 $FrontendJob = $null
+$RootLocationPushed = $false
 
 function Cleanup {
     if ($FrontendJob -and $FrontendJob.State -eq 'Running') {
@@ -88,36 +89,47 @@ $FrontendJob = Start-Job -ScriptBlock {
 Start-Sleep -Seconds 2
 
 Write-Host "[dev] Starting Tauri ..." -ForegroundColor Cyan
-Set-Location "$RootDir\backend"
+Push-Location "$RootDir\backend"
+$RootLocationPushed = $true
 
 # Check for Tauri CLI
 $tauriCmd = Get-Command tauri -ErrorAction SilentlyContinue
-$cargoTauri = $null
-if (-not $tauriCmd) {
+$tauriMajor = $null
+if ($tauriCmd) {
     try {
-        $null = cargo tauri --version 2>$null
-        $cargoTauri = $true
-    }
-    catch {
-        $cargoTauri = $false
-    }
+        $v = & tauri --version 2>$null
+        if ($v -match "(\d+)\.") { $tauriMajor = [int]$Matches[1] }
+    } catch { }
 }
 
+$cargoTauriMajor = $null
 try {
-    if ($tauriCmd) {
-        tauri dev
-    }
-    elseif ($cargoTauri) {
+    $cv = & cargo tauri --version 2>$null
+    if ($cv -match "(\d+)\.") { $cargoTauriMajor = [int]$Matches[1] }
+} catch { }
+
+try {
+    # Prefer a v2-compatible CLI since this repo uses Tauri 2.x config/deps.
+    if ($cargoTauriMajor -ge 2) {
         cargo tauri dev
     }
+    elseif ($tauriCmd -and $tauriMajor -ge 2) {
+        tauri dev
+    }
     else {
-        Write-Host "[dev] ERROR: No Tauri CLI found." -ForegroundColor Red
-        Write-Host "[dev] Install one of:" -ForegroundColor Red
+        if ($tauriCmd -and $tauriMajor -and $tauriMajor -lt 2) {
+            Write-Host "[dev] ERROR: Found Tauri CLI v$tauriMajor, but this project requires Tauri CLI v2." -ForegroundColor Red
+        }
+        else {
+            Write-Host "[dev] ERROR: No Tauri CLI v2 found." -ForegroundColor Red
+        }
+        Write-Host "[dev] Install/upgrade one of:" -ForegroundColor Red
         Write-Host "  - npm:   npm install -g `"@tauri-apps/cli@^2`"" -ForegroundColor Yellow
-        Write-Host "  - cargo: cargo install tauri-cli" -ForegroundColor Yellow
+        Write-Host "  - cargo: cargo install tauri-cli --version `"^2`"" -ForegroundColor Yellow
         exit 1
     }
 }
 finally {
     Cleanup
+    if ($RootLocationPushed) { Pop-Location }
 }
